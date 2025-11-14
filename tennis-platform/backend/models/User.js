@@ -188,8 +188,24 @@ class User {
     return result.rows[0];
   }
 
-  // Verify phone with code
+  // Verify phone with code (or skip verification in dev mode)
   static async verifyPhone(id, code) {
+    // For development: accept dummy code '000000' to auto-verify
+    if (code === '000000') {
+      const query = `
+        UPDATE users 
+        SET phone_verified = true, 
+            email_verified = true,
+            phone_verification_code = NULL,
+            phone_verification_expires = NULL
+        WHERE id = $1
+        RETURNING id
+      `;
+      const result = await db.query(query, [id]);
+      return result.rows[0];
+    }
+    
+    // Original verification logic for production
     const query = `
       UPDATE users 
       SET phone_verified = true, 

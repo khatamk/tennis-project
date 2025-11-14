@@ -76,24 +76,16 @@ exports.register = async (req, res) => {
       preferredLanguage: preferredLanguage || 'az'
     });
 
-    // Generate phone verification code
-    const verificationCode = generateVerificationCode();
-    await User.setPhoneVerificationCode(user.id, verificationCode);
-
-    // Send verification SMS
-    try {
-      await sendVerificationSMS(formattedPhone, verificationCode);
-    } catch (smsError) {
-      console.error('SMS send failed:', smsError);
-      // Continue registration even if SMS fails
-    }
+    // Auto-verify phone for now (skip SMS verification)
+    await User.verifyPhone(user.id, '000000'); // Dummy code to mark as verified
+    await User.checkProfileComplete(user.id);
 
     // Generate JWT token
     const token = generateToken(user.id);
 
     res.status(201).json({
       success: true,
-      message: 'Registration successful. Please verify your phone number.',
+      message: 'Registration successful! You can now login.',
       token,
       user: {
         id: user.id,
@@ -103,11 +95,10 @@ exports.register = async (req, res) => {
         lastName: user.last_name,
         ntrpInitial: user.ntrp_initial,
         eloRating: user.elo_rating,
-        phoneVerified: false,
-        emailVerified: false,
-        profileComplete: false
-      },
-      verificationCodeSent: true
+        phoneVerified: true,  // Auto-verified
+        emailVerified: true,   // Auto-verified for now
+        profileComplete: true
+      }
     });
 
   } catch (error) {
