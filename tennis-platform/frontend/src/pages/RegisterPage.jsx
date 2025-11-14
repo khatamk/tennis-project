@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { authAPI } from '../api/api';
 import { useAuthStore } from '../store/authStore';
@@ -22,8 +22,6 @@ const RegisterPage = () => {
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  const [showVerification, setShowVerification] = useState(false);
-  const [verificationCode, setVerificationCode] = useState('');
 
   const handleChange = (e) => {
     setFormData({
@@ -69,8 +67,12 @@ const RegisterPage = () => {
       // Store token and user
       setAuth(response.data.user, response.data.token);
 
-      toast.success('Registration successful! Please verify your phone.');
-      setShowVerification(true);
+      toast.success('Registration successful! Redirecting...');
+      
+      // Go directly to dashboard (no verification needed)
+      setTimeout(() => {
+        navigate('/');
+      }, 1500);
 
     } catch (error) {
       const errorMsg = error.response?.data?.error || 'Registration failed';
@@ -80,92 +82,18 @@ const RegisterPage = () => {
     }
   };
 
-  const handleVerifyPhone = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      await authAPI.verifyPhone(verificationCode);
-      toast.success('Phone verified successfully!');
-      navigate('/profile/complete'); // Redirect to profile completion
-    } catch (error) {
-      toast.error(error.response?.data?.error || 'Invalid verification code');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleResendCode = async () => {
-    try {
-      await authAPI.resendPhoneCode();
-      toast.success('Verification code sent!');
-    } catch (error) {
-      toast.error('Failed to resend code');
-    }
-  };
-
-  if (showVerification) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
-          <div className="text-center mb-6">
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900">Verify Your Phone</h2>
-            <p className="text-gray-600 mt-2">
-              We sent a 6-digit code to {formData.phone}
-            </p>
-          </div>
-
-          <form onSubmit={handleVerifyPhone} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Verification Code
-              </label>
-              <input
-                type="text"
-                maxLength="6"
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-center text-2xl tracking-widest"
-                placeholder="000000"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading || verificationCode.length !== 6}
-              className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
-            >
-              {isLoading ? 'Verifying...' : 'Verify Phone'}
-            </button>
-
-            <button
-              type="button"
-              onClick={handleResendCode}
-              className="w-full text-green-600 py-2 font-medium hover:underline"
-            >
-              Resend Code
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">🎾 Join Tennis Platform</h1>
+          <div className="inline-block p-3 bg-white rounded-full shadow-lg mb-4">
+            <span className="text-5xl">🎾</span>
+          </div>
+          <h1 className="text-4xl font-bold text-gray-900">Join Tennis Platform</h1>
           <p className="mt-2 text-gray-600">Create your account and start playing</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-8">
+        <div className="bg-white rounded-2xl shadow-xl p-8">
           <form onSubmit={handleRegister} className="space-y-6">
             {/* Name Fields */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -178,7 +106,7 @@ const RegisterPage = () => {
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   required
                 />
               </div>
@@ -191,7 +119,7 @@ const RegisterPage = () => {
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   required
                 />
               </div>
@@ -207,7 +135,7 @@ const RegisterPage = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 placeholder="rashad@example.com"
                 required
               />
@@ -222,7 +150,7 @@ const RegisterPage = () => {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 placeholder="0501234567"
                 required
               />
@@ -239,7 +167,7 @@ const RegisterPage = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 required
                 minLength="6"
               />
@@ -254,7 +182,7 @@ const RegisterPage = () => {
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 required
               />
             </div>
@@ -270,7 +198,7 @@ const RegisterPage = () => {
                   name="birthYear"
                   value={formData.birthYear}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   min="1940"
                   max="2020"
                   required
@@ -284,7 +212,7 @@ const RegisterPage = () => {
                   name="gender"
                   value={formData.gender}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   required
                 >
                   <option value="">Select...</option>
@@ -305,7 +233,7 @@ const RegisterPage = () => {
                 name="ntrpInitial"
                 value={formData.ntrpInitial}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 required
               >
                 <option value="">Select your level...</option>
@@ -333,7 +261,7 @@ const RegisterPage = () => {
                 name="preferredLanguage"
                 value={formData.preferredLanguage}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               >
                 <option value="az">Azərbaycan</option>
                 <option value="ru">Русский</option>
@@ -345,22 +273,29 @@ const RegisterPage = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition text-lg"
+              className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition text-lg transform hover:scale-[1.02] active:scale-[0.98]"
             >
               {isLoading ? 'Creating Account...' : 'Create Account'}
             </button>
 
             <p className="text-center text-sm text-gray-600">
               Already have an account?{' '}
-              <button
-                type="button"
-                onClick={() => navigate('/login')}
+              <Link
+                to="/login"
                 className="text-green-600 font-medium hover:underline"
               >
                 Sign in
-              </button>
+              </Link>
             </p>
           </form>
+        </div>
+
+        {/* Info Banner */}
+        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <p className="text-sm text-blue-800 text-center">
+            📧 <strong>Note:</strong> Email verification is currently disabled for easier testing. 
+            You can register and login immediately!
+          </p>
         </div>
       </div>
     </div>
